@@ -10,8 +10,7 @@ class ScaffoldingsController < ApplicationController
     redis = Redis.new
 
     all_job_coordinates = current_scaffolding_data.map do |permit|
-      job_coordinates = get_job_coordinates(redis, permit)
-      [job_coordinates['latitude'], job_coordinates['longitude']]
+      get_job_coordinates(redis, permit)
     end
 
     @response = JSON.generate(all_job_coordinates)
@@ -46,24 +45,21 @@ class ScaffoldingsController < ApplicationController
         api_key: ENV['SCAFFOLDING_APP_GOOGLE_API_KEY'],
       }
     )
-    coordinates = Geocoder.coordinates("#{permit['house__'].strip} #{permit['street_name'].strip}, #{permit['zip_code'].strip}")
-    job = {
-      job_number: job_number,
-      latitude: coordinates[0],
-      longitude: coordinates[1]
-    }
 
-    redis.hset("job_coordinates", job_number, job.to_json)
-    # unless coordinates.nil?
+    address = "#{permit['house__'].strip} #{permit['street_name'].strip}"
+    coordinates = Geocoder.coordinates("#{address}, #{permit['zip_code'].strip}")
 
-      # job = {
-        # job_number: job_number,
-        # latitude: coordinates[0],
-        # longitude: coordinates[1]
-      # }
+    unless coordinates.nil?
 
-      # redis.hset("job_coordinates", job_number, job.to_json)
-    # end
+      job = {
+        job_number: job_number,
+        latitude: coordinates[0],
+        longitude: coordinates[1],
+        address: address
+      }
+
+      redis.hset("job_coordinates", job_number, job.to_json)
+    end
   end
 
   def get_current_open_nyc_data

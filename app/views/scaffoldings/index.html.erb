@@ -7,8 +7,6 @@
   L.mapbox.accessToken = 'pk.eyJ1Ijoic2FpdG95ZXVuZyIsImEiOiJPOXA3aUowIn0.spWqAgo8-BgTGtYiLbOztg';
   var map = L.mapbox.map('map', 'examples.map-i86nkdio').setView([40.756059, -73.987109], 12);
   for(var i = 0; i < response.length; i++) {
-    console.log(response[i]);
-    L.marker([response[i][0], response[i][1]]).addTo(map);
+    L.marker([response[i]['latitude'], response[i]['longitude']], {'title':response[i]['address']} ).addTo(map);
   }
-
 </script>
