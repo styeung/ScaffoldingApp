@@ -6,6 +6,7 @@
   <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
   <%= csrf_meta_tags %>
   <script src='https://api.tiles.mapbox.com/mapbox.js/v2.1.6/mapbox.js'></script>
+  <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=geometry&key="+"<%= ENV['SCAFFOLDING_APP_GOOGLE_API_KEY'] %>"></script>
   <link href='https://api.tiles.mapbox.com/mapbox.js/v2.1.6/mapbox.css' rel='stylesheet' />
 </head>
 <body>

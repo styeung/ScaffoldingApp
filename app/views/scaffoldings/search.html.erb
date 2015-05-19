@@ -1,0 +1,24 @@
+<div id='map'></div>
+<div id='response' style='display: none'><%= @response %></div>
+<script>
+  var responseJSON = $('#response').html();
+  var response = JSON.parse(responseJSON);
+  L.mapbox.accessToken = 'pk.eyJ1Ijoic2FpdG95ZXVuZyIsImEiOiJPOXA3aUowIn0.spWqAgo8-BgTGtYiLbOztg';
+  var map = L.mapbox.map('map', 'examples.map-i86nkdio').setView([40.756059, -73.987109], 12);
+
+  var route = response['routes'][0];
+  var steps = route['legs'][0]['steps'];
+  var latLngs = [];
+
+  for(var i = 0; i < steps.length; i++) {
+    currentLatLngs = google.maps.geometry.encoding.decodePath(steps[i]['polyline']['points']);
+    convertedLatLngs = [];
+    for(var j = 0; j < currentLatLngs.length; j++) {
+      convertedLatLngs.push([currentLatLngs[j]['A'], currentLatLngs[j]['F']]);
+    }
+
+    latLngs = latLngs.concat(convertedLatLngs);
+  }
+
+  var polyline = L.polyline(latLngs, {color: 'red'}).addTo(map);
+</script>

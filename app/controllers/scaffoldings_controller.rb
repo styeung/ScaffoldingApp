@@ -4,6 +4,22 @@ require 'geocoder'
 require 'redis'
 
 class ScaffoldingsController < ApplicationController
+  def input_request
+    render :input_request
+  end
+
+  def search
+    origin = Geocoder.coordinates(params[:origin]).join(',')
+    destination = Geocoder.coordinates(params[:destination]).join(',')
+    request_url = "https://maps.googleapis.com/maps/api/directions/json?"\
+                  "origin=#{origin}&destination=#{destination}&"\
+                  "key=#{ENV['SCAFFOLDING_APP_GOOGLE_API_KEY']}"
+
+    @response = JSON.generate(HTTParty.get(request_url))
+
+    render :search
+  end
+
   def index
     current_scaffolding_data = get_current_open_nyc_data
 
