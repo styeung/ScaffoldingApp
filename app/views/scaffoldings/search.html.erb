@@ -1,5 +1,6 @@
 <div id='map'></div>
 <div id='response' style='display: none'><%= @response %></div>
+<div id='job-coordinates' style='display: none'><%= @job_coordinates %></div>
 <script>
   var responseJSON = $('#response').html();
   var response = JSON.parse(responseJSON);
@@ -21,4 +22,10 @@
   }
 
   var polyline = L.polyline(latLngs, {color: 'red'}).addTo(map);
+
+  var jobCoordinatesJSON = $('#job-coordinates').html();
+  var jobCoordinates = JSON.parse(jobCoordinatesJSON);
+  for(var i = 0; i < jobCoordinates.length; i++) {
+    L.marker([jobCoordinates[i]['latitude'], jobCoordinates[i]['longitude']], {'title':jobCoordinates[i]['address']} ).addTo(map);
+  }
 </script>

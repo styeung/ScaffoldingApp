@@ -9,13 +9,31 @@ class ScaffoldingsController < ApplicationController
   end
 
   def search
-    origin = Geocoder.coordinates(params[:origin]).join(',')
-    destination = Geocoder.coordinates(params[:destination]).join(',')
+    origin = Geocoder.coordinates(params[:origin])
+    destination = Geocoder.coordinates(params[:destination])
     request_url = "https://maps.googleapis.com/maps/api/directions/json?"\
-                  "origin=#{origin}&destination=#{destination}&"\
+                  "origin=#{origin.join(',')}&destination=#{destination.join(',')}&"\
                   "key=#{ENV['SCAFFOLDING_APP_GOOGLE_API_KEY']}"
 
     @response = JSON.generate(HTTParty.get(request_url))
+    total_distance = distance_between_two_points(origin, destination)
+
+    current_scaffolding_data = get_current_open_nyc_data
+
+    redis = Redis.new
+
+    relevant_job_coordinates = current_scaffolding_data.select do |permit|
+      job_coordinates = get_job_coordinates(redis, permit)
+      next if job_coordinates.nil?
+      job_coordinates_lat_lng = [job_coordinates['latitude'], job_coordinates['longitude']]
+
+      (distance_between_two_points(job_coordinates_lat_lng, origin) < total_distance/2 && \
+        distance_between_two_points(job_coordinates_lat_lng, destination) < total_distance) || \
+        (distance_between_two_points(job_coordinates_lat_lng, destination) < total_distance/2 && \
+        distance_between_two_points(job_coordinates_lat_lng, origin) < total_distance)
+    end.map { |permit| get_job_coordinates(redis, permit) }
+
+    @job_coordinates = JSON.generate(relevant_job_coordinates)
 
     render :search
   end
@@ -34,6 +52,10 @@ class ScaffoldingsController < ApplicationController
   end
 
   private
+
+  def distance_between_two_points(origin, destination)
+    Math.sqrt((destination[1] - origin[1])**2 + (destination[0] - origin[0])**2)
+  end
 
   def get_job_coordinates(redis, permit)
     job_number = permit['job__']
