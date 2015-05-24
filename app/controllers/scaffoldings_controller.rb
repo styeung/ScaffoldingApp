@@ -13,6 +13,7 @@ class ScaffoldingsController < ApplicationController
     destination = Geocoder.coordinates(params[:destination])
     request_url = "https://maps.googleapis.com/maps/api/directions/json?"\
                   "origin=#{origin.join(',')}&destination=#{destination.join(',')}&"\
+                  "mode=walking&alternatives=true&" \
                   "key=#{ENV['SCAFFOLDING_APP_GOOGLE_API_KEY']}"
 
     @response = JSON.generate(HTTParty.get(request_url))

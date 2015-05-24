@@ -7,25 +7,93 @@
   L.mapbox.accessToken = 'pk.eyJ1Ijoic2FpdG95ZXVuZyIsImEiOiJPOXA3aUowIn0.spWqAgo8-BgTGtYiLbOztg';
   var map = L.mapbox.map('map', 'examples.map-i86nkdio').setView([40.756059, -73.987109], 12);
 
-  var route = response['routes'][0];
-  var steps = route['legs'][0]['steps'];
-  var latLngs = [];
-
-  for(var i = 0; i < steps.length; i++) {
-    currentLatLngs = google.maps.geometry.encoding.decodePath(steps[i]['polyline']['points']);
-    convertedLatLngs = [];
-    for(var j = 0; j < currentLatLngs.length; j++) {
-      convertedLatLngs.push([currentLatLngs[j]['A'], currentLatLngs[j]['F']]);
-    }
-
-    latLngs = latLngs.concat(convertedLatLngs);
-  }
-
-  var polyline = L.polyline(latLngs, {color: 'red'}).addTo(map);
-
   var jobCoordinatesJSON = $('#job-coordinates').html();
   var jobCoordinates = JSON.parse(jobCoordinatesJSON);
-  for(var i = 0; i < jobCoordinates.length; i++) {
-    L.marker([jobCoordinates[i]['latitude'], jobCoordinates[i]['longitude']], {'title':jobCoordinates[i]['address']} ).addTo(map);
+  var MINDISTANCE = 0.0006;
+
+  var COLORS = ['green', 'brown', 'blue', 'yellow']
+
+  var routes = response['routes'];
+
+  var routeLatLngList = {};
+  var coordinateList = {};
+
+  for(var k = 0; k < routes.length; k++) {
+    var route = routes[k];
+    var steps = route['legs'][0]['steps'];
+    var latLngs = [];
+    coordinateList[k] = {};
+
+    for(var i = 0; i < steps.length; i++) {
+      currentLatLngs = google.maps.geometry.encoding.decodePath(steps[i]['polyline']['points']);
+      convertedLatLngs = [];
+      for(var j = 0; j < currentLatLngs.length; j++) {
+        convertedLatLngs.push([currentLatLngs[j]['A'], currentLatLngs[j]['F']]);
+      }
+
+      latLngs = latLngs.concat(convertedLatLngs).slice(0);
+
+    }
+
+    for(var j = 0; j < latLngs.length - 1; j++) {
+      for(var m = 0; m < jobCoordinates.length; m++) {
+        jobCoordinate = [jobCoordinates[m]['latitude'], jobCoordinates[m]['longitude']];
+
+        if (distance_between_point_and_segment(jobCoordinate, latLngs[j], latLngs[j+1]) <= MINDISTANCE) {
+          coordinateList[k][jobCoordinate[0]] = jobCoordinate[1];
+        }
+      }
+    }
+
+    routeLatLngList[k] = latLngs.slice(0);
+  }
+
+  var maxCoordinates = 0;
+  var bestRouteIndex;
+  for(var key in coordinateList) {
+    if (Object.keys(coordinateList[key]).length > maxCoordinates) {
+      maxCoordinates = Object.keys(coordinateList[key]).length;
+      bestRouteIndex = key;
+    }
+  }
+
+  for(var key in routeLatLngList) {
+    if (key === bestRouteIndex) {
+      var polyline = L.polyline(routeLatLngList[key], {color: 'red'}).addTo(map);
+    }
+    else {
+      var polyline = L.polyline(routeLatLngList[key], {color: COLORS[key]}).addTo(map);
+    }
+  }
+
+  for(var i in coordinateList) {
+    for(var key in coordinateList[i]) {
+      L.marker([key, coordinateList[i][key]], {'title':'placeholder address'} ).addTo(map);
+    }
+  }
+
+  map.fitBounds(polyline.getBounds());
+
+  function distance_between_point_and_segment(point, segment_origin, segment_destination) {
+    var dy = segment_destination[1] - segment_origin[1];
+    var dx = segment_destination[0] - segment_origin[0];
+
+    var t =  ((point[0] - segment_origin[0])*dx + (point[1] - segment_origin[1])*dy) / (Math.pow(dx,2) + Math.pow(dy,2));
+
+    if (t > 0) {
+      dx = point[0] - segment_origin[0];
+      dy = point[1] - segment_origin[1];
+    }
+    else if (t < 1) {
+      dx = point[0] - segment_destination[0];
+      dy = point[1] - segment_destination[1];
+    }
+    else {
+      var closest_point_on_line = [segment_origin[0] + t*dx, segment_origin[1] + t*dy];
+      dx = point[0] - closest_point_on_line[0];
+      dy = point[1] - closest_point_on_line[1];
+    }
+
+    return Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
   }
 </script>
