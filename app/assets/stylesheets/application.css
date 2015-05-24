@@ -17,6 +17,13 @@
 body {
   margin:0;
   padding:0;
+  font-family: helvetica-neue, arial
+}
+
+input {
+  margin: 10px;
+  padding: 10px;
+  font-size: 14px
 }
 
 #map {

@@ -1,8 +1,12 @@
 <%= form_tag({ controller: 'scaffoldings', action: 'search' }, method: 'get', class: 'search') do  %>
- <%= label_tag :origin, 'Origin' %>
+ <%= label_tag :origin, 'ORIGIN' %>
+ <br>
  <%= text_field_tag :origin %>
+ <br>
 
- <%= label_tag :destination, 'Destination' %>
+ <%= label_tag :destination, 'DESTINATION' %>
+ <br>
  <%= text_field_tag :destination %>
+ <br>
  <%= submit_tag('Get directions') %>
 <% end %>
